@@ -7,20 +7,26 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
     @Override
     public String uploadFile(String path, MultipartFile file) throws IOException {
-        String fileName = file.getOriginalFilename();
-        String filePath = path + File.separator+fileName;
-        File f = new File(path);
-        if (!f.exists()) {
-            f.mkdirs();
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
         }
-        Files.copy(file.getInputStream(), Paths.get(filePath));
+
+        String fileName = Paths.get(Objects.requireNonNull(file.getOriginalFilename())).getFileName().toString(); // Prevent path traversal
+        Path fullPath = Paths.get(path).resolve(fileName);
+
+        Files.createDirectories(fullPath.getParent()); // Creates path if it doesn't exist
+        Files.copy(file.getInputStream(), fullPath, StandardCopyOption.REPLACE_EXISTING);
+
         return fileName;
     }
 
@@ -43,5 +49,11 @@ public class FileServiceImpl implements FileService {
         } else {
             throw new FileNotFoundException("File not found: " + filePath);
         }
+    }
+
+    @Override
+    public String updateFile(String path, MultipartFile file, String image) throws IOException {
+        deleteFile(path, image);
+        return uploadFile(path, file);
     }
 }

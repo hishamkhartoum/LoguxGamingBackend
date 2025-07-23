@@ -10,6 +10,7 @@ import com.hadef.loguxgaming.mapper.ProductMapper;
 import com.hadef.loguxgaming.service.ProductService;
 import com.hadef.loguxgaming.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,8 +38,8 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ViewProductDto> createProduct(@RequestPart String createProductDto
-            , @RequestPart(required = false) MultipartFile image
+    public ResponseEntity<ProductDto> createProduct(@RequestPart String createProductDto
+            , @RequestPart MultipartFile image
             , @RequestHeader UUID userId
     ) throws IOException {
         if(image.isEmpty()) image=null;
@@ -46,8 +47,40 @@ public class ProductController {
         User loggedInUser = userService.getUserById(userId);
         CreateProductRequest createProductRequest = productMapper.toCreateProductRequest(dtoProduct);
         Product product = productService.createProduct(createProductRequest, image, loggedInUser);
-        ViewProductDto dto = productMapper.toViewDto(product);
+        ProductDto dto = productMapper.toDto(product);
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+    }
+
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<ProductDto> getProductById(@PathVariable UUID id) {
+        Product byId = productService.findById(id);
+        ProductDto dto = productMapper.toDto(byId);
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping(path = "/view/{id}")
+    public ResponseEntity<ViewProductDto> getViewProductById(@PathVariable UUID id) {
+        Product byId = productService.findById(id);
+        ViewProductDto dto = productMapper.toViewDto(byId);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable UUID id,
+                                                        @RequestPart String updateProductDto,
+                                                        @RequestPart(required = false) MultipartFile image,
+                                                        @RequestHeader UUID userId) throws IOException {
+        User loggedInUser = userService.getUserById(userId);
+        UpdateProductDto convertedDto = convertToUpdateProductDto(updateProductDto);
+        UpdateProductRequest updateProductRequest = productMapper.toUpdateProductRequest(convertedDto);
+        Product product = productService.updateProduct(id, updateProductRequest, loggedInUser, image);
+        ProductDto dto = productMapper.toDto(product);
+        return ResponseEntity.ok(dto);
+    }
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteProductById(@PathVariable UUID id) {
+        productService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     private CreateProductDto convertToCreateProductDto(String dtoObj) throws JsonProcessingException {
@@ -55,16 +88,8 @@ public class ProductController {
         return objectMapper.readValue(dtoObj, CreateProductDto.class);
     }
 
-    @GetMapping(path = "/{id}")
-    public ResponseEntity<ViewProductDto> getProductById(@PathVariable UUID id) {
-        Product byId = productService.findById(id);
-        ViewProductDto dto = productMapper.toViewDto(byId);
-        return ResponseEntity.ok(dto);
-    }
-
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<Void> deleteProductById(@PathVariable UUID id) {
-        productService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    private UpdateProductDto convertToUpdateProductDto(String dtoObj) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(dtoObj, UpdateProductDto.class);
     }
 }

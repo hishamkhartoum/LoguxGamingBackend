@@ -1,6 +1,7 @@
 package com.hadef.loguxgaming.service.impl;
 
 import com.hadef.loguxgaming.domain.dto.CreateProductRequest;
+import com.hadef.loguxgaming.domain.dto.UpdateProductRequest;
 import com.hadef.loguxgaming.domain.entity.Genre;
 import com.hadef.loguxgaming.domain.entity.Product;
 import com.hadef.loguxgaming.domain.entity.Tag;
@@ -8,6 +9,7 @@ import com.hadef.loguxgaming.domain.entity.User;
 import com.hadef.loguxgaming.domain.value.ProductStatus;
 import com.hadef.loguxgaming.repository.ProductRepository;
 import com.hadef.loguxgaming.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +65,42 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Product updateProduct(UUID id, UpdateProductRequest updateProductRequest,
+                                 User user, MultipartFile image) throws IOException {
+        Product existingProduct = productRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Product not found with id " + id)
+        );
+
+        if (image !=null){
+            String uploadedFileName = fileService.updateFile(path, image,existingProduct.getImage());
+            existingProduct.setImage(uploadedFileName);
+        }
+
+        existingProduct.setName(updateProductRequest.getName());
+        existingProduct.setDescription(updateProductRequest.getDescription());
+        existingProduct.setQuantity(updateProductRequest.getQuantity());
+        existingProduct.setPrice(updateProductRequest.getPrice());
+        existingProduct.setDiscount(updateProductRequest.getDiscount());
+        Set<UUID> existingTagIds = existingProduct.getTags().stream()
+                .map(Tag::getId).collect(Collectors.toSet());
+        Set<UUID> updateProductRequestTagIds = updateProductRequest.getTagsIds();
+        if(!existingTagIds.equals(updateProductRequestTagIds)) {
+            List<Tag> newTags = tagService.getTagsByIds(updateProductRequestTagIds);
+            existingProduct.setTags(new HashSet<>(newTags));
+        }
+        Set<UUID> existingGenreIds = existingProduct.getGenres().stream()
+                .map(Genre::getId).collect(Collectors.toSet());
+        Set<UUID> updateProductRequestGenreIds = updateProductRequest.getGenresIds();
+        if(!existingGenreIds.equals(updateProductRequestGenreIds)) {
+            List<Genre> newGenre = genreService.getGenresByIds(updateProductRequestGenreIds);
+            existingProduct.setGenres(new HashSet<>(newGenre));
+        }
+        existingProduct.setStatus(updateProductRequest.getStatus());
+
+        return productRepository.save(existingProduct);
+    }
+
+    @Override
     public List<Product> getAllProducts(UUID genreId, UUID tagId) {
         if(genreId != null && tagId != null) {
             Genre genre = genreService.findById(genreId);
@@ -94,10 +134,6 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
-    @Override
-    public Product updateProduct(Product product, UUID id) {
-        return null;
-    }
 
     @Override
     public void deleteById(UUID id) {

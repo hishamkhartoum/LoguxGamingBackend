@@ -1,9 +1,6 @@
 package com.hadef.loguxgaming.mapper;
 
-import com.hadef.loguxgaming.domain.dto.CreateProductDto;
-import com.hadef.loguxgaming.domain.dto.CreateProductRequest;
-import com.hadef.loguxgaming.domain.dto.ProductDto;
-import com.hadef.loguxgaming.domain.dto.ViewProductDto;
+import com.hadef.loguxgaming.domain.dto.*;
 import com.hadef.loguxgaming.domain.entity.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,4 +18,5 @@ public interface ProductMapper {
     ViewProductDto toViewDto(Product product);
 
     CreateProductRequest toCreateProductRequest(CreateProductDto createProductDto);
+    UpdateProductRequest toUpdateProductRequest(UpdateProductDto updateProductDto);
 }
