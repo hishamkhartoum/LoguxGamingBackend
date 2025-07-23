@@ -1,8 +1,6 @@
 package com.hadef.loguxgaming.service.impl;
 
-import com.hadef.loguxgaming.domain.dto.CreateProductDto;
 import com.hadef.loguxgaming.domain.dto.CreateProductRequest;
-import com.hadef.loguxgaming.domain.dto.ProductDto;
 import com.hadef.loguxgaming.domain.entity.Genre;
 import com.hadef.loguxgaming.domain.entity.Product;
 import com.hadef.loguxgaming.domain.entity.Tag;
@@ -10,14 +8,16 @@ import com.hadef.loguxgaming.domain.entity.User;
 import com.hadef.loguxgaming.domain.value.ProductStatus;
 import com.hadef.loguxgaming.repository.ProductRepository;
 import com.hadef.loguxgaming.service.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -26,6 +26,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -56,7 +57,6 @@ public class ProductServiceImpl implements ProductService {
                 .status(createProductRequest.getStatus())
                 .user(user)
                 .build();
-
         return productRepository.save(product);
     }
 
@@ -87,8 +87,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public Product findById(UUID id) {
-        return productRepository.findById(id).orElseThrow(
+        return productRepository.findByIdWithGenresAndTags(id).orElseThrow(
                 ()->new RuntimeException("Product not found with id " + id)
         );
     }
@@ -100,7 +101,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteById(UUID id) {
-        productRepository.deleteById(id);
+        productRepository.findById(id).ifPresent(
+                product -> {
+                    try {
+                        fileService.deleteFile(path,product.getImage());
+                    } catch (FileNotFoundException e) {
+                        log.warn("Couldn't find a file with name: "+product.getImage());
+                    }
+                    productRepository.deleteById(id);
+                }
+        );
     }
 
 }

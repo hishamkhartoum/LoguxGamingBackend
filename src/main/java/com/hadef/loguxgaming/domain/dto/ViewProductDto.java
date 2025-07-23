@@ -25,7 +25,4 @@ public class ViewProductDto {
     private BigDecimal discount;
     private Set<GenreDto> genres;
     private Set<TagDto> tags;
-    private ProductStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

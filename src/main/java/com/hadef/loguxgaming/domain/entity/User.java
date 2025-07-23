@@ -1,5 +1,6 @@
 package com.hadef.loguxgaming.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hadef.loguxgaming.domain.value.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,6 +35,7 @@ public class User {
     @Column(nullable = false)
     private Long phoneNumber;
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Product> product = new ArrayList<>();
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -45,13 +47,14 @@ public class User {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(fullName, user.fullName) && Objects.equals(phoneNumber, user.phoneNumber) && Objects.equals(product, user.product) && role == user.role && Objects.equals(createdAt, user.createdAt) && Objects.equals(updatedAt, user.updatedAt);
+        return id != null && id.equals(user.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, password, fullName, phoneNumber, product, role, createdAt, updatedAt);
+        return Objects.hash(id);
     }
 }

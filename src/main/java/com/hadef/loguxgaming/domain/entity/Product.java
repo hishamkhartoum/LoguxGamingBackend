@@ -1,5 +1,6 @@
 package com.hadef.loguxgaming.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hadef.loguxgaming.domain.value.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,6 +39,7 @@ public class Product {
     private BigDecimal price;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
     private BigDecimal discount;
     @ManyToMany
@@ -64,13 +66,14 @@ public class Product {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Objects.equals(id, product.id) && Objects.equals(name, product.name) && Objects.equals(description, product.description) && Objects.equals(image, product.image) && Objects.equals(quantity, product.quantity) && Objects.equals(price, product.price) && Objects.equals(user, product.user) && Objects.equals(discount, product.discount) && Objects.equals(genres, product.genres) && Objects.equals(tags, product.tags) && status == product.status && Objects.equals(createdAt, product.createdAt) && Objects.equals(updatedAt, product.updatedAt);
+        return id != null && id.equals(product.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, image, quantity, price, user, discount, genres, tags, status, createdAt, updatedAt);
+        return Objects.hash(id);
     }
 }

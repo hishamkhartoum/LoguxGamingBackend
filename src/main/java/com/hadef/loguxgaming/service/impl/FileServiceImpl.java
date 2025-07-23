@@ -29,4 +29,19 @@ public class FileServiceImpl implements FileService {
         String filePath = path + File.separator+fileName;
         return new FileInputStream(filePath);
     }
+
+    @Override
+    public void deleteFile(String path, String fileName) throws FileNotFoundException {
+        String filePath = path + File.separator + fileName;
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            boolean deleted = file.delete();
+            if (!deleted) {
+                throw new RuntimeException("Failed to delete file: " + filePath);
+            }
+        } else {
+            throw new FileNotFoundException("File not found: " + filePath);
+        }
+    }
 }

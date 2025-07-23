@@ -56,8 +56,10 @@ public class ProductController {
     }
 
     @GetMapping(path = "/{id}")
-    public ResponseEntity<ProductDto> getProductById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productMapper.toDto(productService.findById(id)));
+    public ResponseEntity<ViewProductDto> getProductById(@PathVariable UUID id) {
+        Product byId = productService.findById(id);
+        ViewProductDto dto = productMapper.toViewDto(byId);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping(path = "/{id}")
