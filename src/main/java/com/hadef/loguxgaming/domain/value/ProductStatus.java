@@ -1,4 +1,5 @@
 package com.hadef.loguxgaming.domain.value;
 
-public class ProductStatus {
+public enum ProductStatus {
+    AVAILABLE,OUT_OF_STOCK
 }

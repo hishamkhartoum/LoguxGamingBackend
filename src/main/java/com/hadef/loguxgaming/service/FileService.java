@@ -1,4 +1,4 @@
-package com.hadef.movieslist.service;
+package com.hadef.loguxgaming.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
